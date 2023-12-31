@@ -182,13 +182,13 @@ func (d *decoder) decodeDict() (map[string]any, error) {
 func (d *decoder) readByte() (byte, error) {
 	b := make([]byte, 1)
 	read, err := d.reader.Read(b)
-	if err != nil {
-		return 0, err
+	if read > 0 {
+		return b[0], nil
 	}
-	if read < 1 {
+	if err == nil {
 		return 0, io.EOF
 	}
-	return b[0], nil
+	return 0, err
 }
 
 func (d *decoder) checkType(b byte) (int, error) {
