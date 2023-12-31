@@ -14,11 +14,11 @@ const (
 	Dict
 )
 
-type Decoder struct {
+type decoder struct {
 	reader io.Reader
 }
 
-func (d *Decoder) decodeString(firstByte byte) (string, error) {
+func (d *decoder) decodeString(firstByte byte) (string, error) {
 	var (
 		strLen   = []byte{firstByte}
 		strBytes []byte
@@ -50,7 +50,7 @@ func (d *Decoder) decodeString(firstByte byte) (string, error) {
 	return string(strBytes), nil
 }
 
-func (d *Decoder) decodeInt() (int, error) {
+func (d *decoder) decodeInt() (int, error) {
 	var (
 		decodedIntBytes []byte
 		err             error
@@ -114,7 +114,7 @@ func (d *Decoder) decodeInt() (int, error) {
 	return strconv.Atoi(string(decodedIntBytes))
 }
 
-func (d *Decoder) decodeList() ([]any, error) {
+func (d *decoder) decodeList() ([]any, error) {
 	var list []any
 
 	for {
@@ -134,7 +134,7 @@ func (d *Decoder) decodeList() ([]any, error) {
 	return list, nil
 }
 
-func (d *Decoder) decodeDict() (map[string]any, error) {
+func (d *decoder) decodeDict() (map[string]any, error) {
 	var (
 		nextByte byte
 		err      error
@@ -179,7 +179,7 @@ func (d *Decoder) decodeDict() (map[string]any, error) {
 	return dict, nil
 }
 
-func (d *Decoder) readByte() (byte, error) {
+func (d *decoder) readByte() (byte, error) {
 	b := make([]byte, 1)
 	read, err := d.reader.Read(b)
 	if err != nil {
@@ -191,7 +191,7 @@ func (d *Decoder) readByte() (byte, error) {
 	return b[0], nil
 }
 
-func (d *Decoder) checkType(b byte) (int, error) {
+func (d *decoder) checkType(b byte) (int, error) {
 	switch {
 	case b >= '0' && b <= '9':
 		return String, nil
@@ -207,7 +207,7 @@ func (d *Decoder) checkType(b byte) (int, error) {
 
 }
 
-func (d *Decoder) decode(firstByte byte) (any, error) {
+func (d *decoder) decode(firstByte byte) (any, error) {
 	valType, err := d.checkType(firstByte)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (d *Decoder) decode(firstByte byte) (any, error) {
 
 // Decode reads either list, dict, string, int from the reader
 func Decode(r io.Reader) (any, error) {
-	decoder := Decoder{r}
+	decoder := decoder{r}
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func Decode(r io.Reader) (any, error) {
 
 // DecodeString reads a string from the reader
 func DecodeString(r io.Reader) (string, error) {
-	decoder := Decoder{r}
+	decoder := decoder{r}
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return "", err
@@ -255,7 +255,7 @@ func DecodeString(r io.Reader) (string, error) {
 
 // DecodeInt reads a int from the reader
 func DecodeInt(r io.Reader) (int, error) {
-	decoder := Decoder{r}
+	decoder := decoder{r}
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return 0, err
@@ -273,7 +273,7 @@ func DecodeInt(r io.Reader) (int, error) {
 
 // DecodeList reads a list from the reader
 func DecodeList(r io.Reader) ([]any, error) {
-	decoder := Decoder{r}
+	decoder := decoder{r}
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ func DecodeList(r io.Reader) ([]any, error) {
 
 // DecodeDict reads a dict from the reader
 func DecodeDict(r io.Reader) (map[string]any, error) {
-	decoder := Decoder{r}
+	decoder := decoder{r}
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
