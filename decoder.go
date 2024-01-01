@@ -27,10 +27,7 @@ func newDecoder(r io.Reader) *decoder {
 }
 
 func (d *decoder) decodeString(firstByte byte) (string, error) {
-	var (
-		strLen   = []byte{firstByte}
-		strBytes []byte
-	)
+	var strLen = []byte{firstByte}
 
 	for {
 		b, err := d.readByte()
@@ -47,15 +44,14 @@ func (d *decoder) decodeString(firstByte byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	var strAsBytes = make([]byte, strLenAsInt)
 
-	for i := 0; i < strLenAsInt; i++ {
-		b, err := d.readByte()
-		if err != nil {
-			return "", err
-		}
-		strBytes = append(strBytes, b)
+	_, err = io.ReadAtLeast(d.reader, strAsBytes, strLenAsInt)
+	if err != nil {
+		return "", err
 	}
-	return string(strBytes), nil
+
+	return string(strAsBytes), nil
 }
 
 func (d *decoder) decodeInt() (int, error) {
