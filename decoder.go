@@ -1,6 +1,7 @@
 package bencoding
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +16,14 @@ const (
 )
 
 type decoder struct {
-	reader io.Reader
+	reader *bufio.Reader
+}
+
+func newDecoder(r io.Reader) *decoder {
+	if reader, ok := r.(*bufio.Reader); ok {
+		return &decoder{reader}
+	}
+	return &decoder{bufio.NewReader(r)}
 }
 
 func (d *decoder) decodeString(firstByte byte) (string, error) {
@@ -180,15 +188,7 @@ func (d *decoder) decodeDict() (map[string]any, error) {
 }
 
 func (d *decoder) readByte() (byte, error) {
-	b := make([]byte, 1)
-	read, err := d.reader.Read(b)
-	if read > 0 {
-		return b[0], nil
-	}
-	if err == nil {
-		return 0, io.EOF
-	}
-	return 0, err
+	return d.reader.ReadByte()
 }
 
 func (d *decoder) checkType(b byte) (int, error) {
@@ -227,7 +227,7 @@ func (d *decoder) decode(firstByte byte) (any, error) {
 
 // Decode reads either list, dict, string, int from the reader
 func Decode(r io.Reader) (any, error) {
-	decoder := decoder{r}
+	decoder := newDecoder(r)
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func Decode(r io.Reader) (any, error) {
 
 // DecodeString reads a string from the reader
 func DecodeString(r io.Reader) (string, error) {
-	decoder := decoder{r}
+	decoder := newDecoder(r)
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return "", err
@@ -255,7 +255,7 @@ func DecodeString(r io.Reader) (string, error) {
 
 // DecodeInt reads a int from the reader
 func DecodeInt(r io.Reader) (int, error) {
-	decoder := decoder{r}
+	decoder := newDecoder(r)
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return 0, err
@@ -273,7 +273,7 @@ func DecodeInt(r io.Reader) (int, error) {
 
 // DecodeList reads a list from the reader
 func DecodeList(r io.Reader) ([]any, error) {
-	decoder := decoder{r}
+	decoder := newDecoder(r)
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ func DecodeList(r io.Reader) ([]any, error) {
 
 // DecodeDict reads a dict from the reader
 func DecodeDict(r io.Reader) (map[string]any, error) {
-	decoder := decoder{r}
+	decoder := newDecoder(r)
 	readByte, err := decoder.readByte()
 	if err != nil {
 		return nil, err
